@@ -1,0 +1,35 @@
+server:
+  port: 29997
+
+spring:
+  application:
+    name: gts-auth-service
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+springdoc:
+  swagger-ui:
+    try-it-out-enabled: true
+    operations-sorter: alpha
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-key-must-be-at-least-32-chars}
+  access-token-expiry: 1800000    # 30분 (ms)
+  refresh-token-expiry: 1209600000 # 14일 (ms)
