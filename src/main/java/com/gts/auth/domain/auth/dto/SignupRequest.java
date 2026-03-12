@@ -1,5 +1,6 @@
 package com.gts.auth.domain.auth.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,5 +13,8 @@ public record SignupRequest(
         String password,
 
         @NotBlank @Size(min = 2, max = 20, message = "닉네임은 2~20자여야 합니다.")
-        String nickname
+        String nickname,
+
+        @AssertTrue(message = "개인정보처리방침에 동의해야 합니다.")
+        boolean agreedToPrivacyPolicy
 ) {}
