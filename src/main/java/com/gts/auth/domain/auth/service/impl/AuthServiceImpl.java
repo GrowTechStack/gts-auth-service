@@ -7,6 +7,7 @@ import com.gts.auth.domain.auth.dto.TokenResponse;
 import com.gts.auth.domain.auth.service.AuthService;
 import com.gts.auth.domain.token.entity.RefreshToken;
 import com.gts.auth.domain.token.repository.RefreshTokenRepository;
+import com.gts.auth.domain.user.dto.UserResponse;
 import com.gts.auth.domain.user.entity.User;
 import com.gts.auth.domain.user.repository.UserRepository;
 import com.gts.auth.global.error.ErrorCode;
@@ -50,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (user.getPassword() == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -72,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
-        User user = userRepository.findById(refreshToken.getUserId())
+        User user = userRepository.findByIdAndDeletedAtIsNull(refreshToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         refreshTokenRepository.delete(refreshToken);
@@ -86,7 +87,26 @@ public class AuthServiceImpl implements AuthService {
         log.info("[Auth] 로그아웃: userId={}", userId);
     }
 
+    @Override
+    public UserResponse getMe(Long userId) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return UserResponse.from(user);
+    }
+
+    @Override
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.withdraw();
+        refreshTokenRepository.deleteByUserId(userId);
+        log.info("[Auth] 회원탈퇴: userId={}", userId);
+    }
+
     private TokenResponse issueTokens(User user) {
+        refreshTokenRepository.deleteByUserId(user.getId());
+
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole().name());
         String rawRefreshToken = jwtProvider.generateRefreshToken(user.getId());
 

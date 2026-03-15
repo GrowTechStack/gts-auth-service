@@ -49,6 +49,9 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column
+    private LocalDateTime deletedAt;
+
     @Builder
     private User(String email, String password, String nickname, AuthProvider provider, String providerId, Role role) {
         this.email = email;
@@ -81,5 +84,9 @@ public class User {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void withdraw() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

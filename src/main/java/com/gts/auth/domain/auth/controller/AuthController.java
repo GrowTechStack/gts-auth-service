@@ -6,11 +6,7 @@ import com.gts.auth.domain.auth.dto.SignupRequest;
 import com.gts.auth.domain.auth.dto.TokenResponse;
 import com.gts.auth.domain.auth.service.AuthService;
 import com.gts.auth.domain.user.dto.UserResponse;
-import com.gts.auth.domain.user.entity.User;
-import com.gts.auth.domain.user.repository.UserRepository;
 import com.gts.auth.global.common.response.ApiResult;
-import com.gts.auth.global.error.ErrorCode;
-import com.gts.auth.global.error.exception.BusinessException;
 import com.gts.auth.global.jwt.JwtProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +20,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtProvider jwtProvider;
-    private final UserRepository userRepository;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -52,8 +47,12 @@ public class AuthController {
 
     @GetMapping("/me")
     public ApiResult<UserResponse> me(@RequestHeader("X-User-Id") Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return ApiResult.success(UserResponse.from(user));
+        return ApiResult.success(authService.getMe(userId));
+    }
+
+    @DeleteMapping("/withdraw")
+    public ApiResult<Void> withdraw(@RequestHeader("X-User-Id") Long userId) {
+        authService.withdraw(userId);
+        return ApiResult.success(null);
     }
 }
